@@ -5,12 +5,14 @@ using HDF5
 
 export HeisenHeatbathMC
 
+const Vector3D = NTuple{3, Float64}
+
 # Note: Using temperature in units of energy (k_B = 1)
 mutable struct HeisenHeatbathMC <: AbstractMC
     T::Float64 # Temperature
     J::Float64 # Interaction energy
     H::Float64 # External field
-    spins::Matrix{NTuple{3, Float64}}
+    spins::Matrix{Vector3D}
 end
 
 function HeisenHeatbathMC(params::AbstractDict)
