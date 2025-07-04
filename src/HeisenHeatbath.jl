@@ -21,7 +21,7 @@ function HeisenHeatbathMC(params::AbstractDict)
     return HeisenHeatbathMC(T, J, H, zeros(Float64, Lx, Ly))
 end
 
-function Carlo.init!(mc::IsingMC, ctx::Carlo.MCContext, params::AbstractDict)
+function Carlo.init!(mc::HeisenHeatbathMC, ctx::Carlo.MCContext, params::AbstractDict)
     if params[:rand_init]
         mc.spins .= rand(ctx.rng, (-1, 1), size(mc.spins))
     else
@@ -30,7 +30,7 @@ function Carlo.init!(mc::IsingMC, ctx::Carlo.MCContext, params::AbstractDict)
     return nothing
 end
 
-function Carlo.sweep!(mc::IsingMC, ctx::Carlo.MCContext)
+function Carlo.sweep!(mc::HeisenHeatbathMC, ctx::Carlo.MCContext)
     # Select site to propose spin flip
     Lx, Ly = size(mc.spins)
     for _ in 1:length(mc.spins)
@@ -53,7 +53,7 @@ function Carlo.sweep!(mc::IsingMC, ctx::Carlo.MCContext)
     return nothing
 end
 
-function Carlo.measure!(mc::IsingMC, ctx::Carlo.MCContext)
+function Carlo.measure!(mc::HeisenHeatbathMC, ctx::Carlo.MCContext)
     # Magnetization per lattice site
     mag = sum(mc.spins) / length(mc.spins)
     measure!(ctx, :Mag, mag)
@@ -78,7 +78,7 @@ function Carlo.measure!(mc::IsingMC, ctx::Carlo.MCContext)
 end
 
 function Carlo.register_evaluables(
-    ::Type{IsingMC}, eval::AbstractEvaluator, params::AbstractDict
+    ::Type{HeisenHeatbathMC}, eval::AbstractEvaluator, params::AbstractDict
 )
     T = params[:T]
     J = params[:J]
@@ -98,11 +98,11 @@ function Carlo.register_evaluables(
     return nothing
 end
 
-function Carlo.write_checkpoint(mc::IsingMC, out::HDF5.Group)
+function Carlo.write_checkpoint(mc::HeisenHeatbathMC, out::HDF5.Group)
     out["spins"] = mc.spins
     return nothing
 end
-function Carlo.read_checkpoint!(mc::IsingMC, in::HDF5.Group)
+function Carlo.read_checkpoint!(mc::HeisenHeatbathMC, in::HDF5.Group)
     mc.spins .= read(in, "spins")
     return nothing
 end
