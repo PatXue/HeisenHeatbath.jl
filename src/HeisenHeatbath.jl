@@ -10,7 +10,7 @@ mutable struct HeisenHeatbathMC <: AbstractMC
     T::Float64 # Temperature
     J::Float64 # Interaction energy
     H::Float64 # External field
-    spins::Matrix{Vector{Float64}}
+    spins::Matrix{NTuple{3, Float64}}
 end
 
 function HeisenHeatbathMC(params::AbstractDict)
@@ -18,7 +18,7 @@ function HeisenHeatbathMC(params::AbstractDict)
     T = params[:T]
     J = params[:J]
     H = params[:H]
-    return HeisenHeatbathMC(T, J, H, zeros(Float64, Lx, Ly))
+    return HeisenHeatbathMC(T, J, H, fill((0, 0, 0), Lx, Ly))
 end
 
 function Carlo.init!(mc::HeisenHeatbathMC, ctx::Carlo.MCContext, params::AbstractDict)
