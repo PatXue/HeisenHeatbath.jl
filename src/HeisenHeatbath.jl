@@ -46,24 +46,21 @@ function Carlo.init!(mc::HeisenHeatbathMC, ctx::Carlo.MCContext, params::Abstrac
 end
 
 function Carlo.sweep!(mc::HeisenHeatbathMC, ctx::Carlo.MCContext)
-    # Select site to propose spin flip
     Lx, Ly = size(mc.spins)
     for _ in 1:length(mc.spins)
+        # Select site for spin change
         x = rand(ctx.rng, 1:Lx)
         y = rand(ctx.rng, 1:Ly)
 
         # Sum of nearest neighbors' spins
-        adj_spin_sum = mc.spins[mod1(x-1, Lx), y] + mc.spins[x, mod1(y-1, Ly)] +
-                       mc.spins[mod1(x+1, Lx), y] + mc.spins[x, mod1(y+1, Ly)]
-        # Energy diff is -J(s_f - s_i)(sum of adj spins) - H(s_f - s_i),
-        # using that s_f = -s_i
-        ΔE = 2.0mc.spins[x, y] * (mc.J * adj_spin_sum + mc.H)
-        # Probability of accepting spin flip (for ΔE ≤ 0 always accept)
-        prob = exp(-ΔE / mc.T)
+        adj_spin_sum = mc.spins[mod1(x-1, Lx), y] .+ mc.spins[x, mod1(y-1, Ly)] .+
+                       mc.spins[mod1(x+1, Lx), y] .+ mc.spins[x, mod1(y+1, Ly)]
+        H = adj_spin_sum ./ mc.T
 
-        if rand(ctx.rng) < prob
-            mc.spins[x, y] *= -1
-        end
+        # Randomly generate new θ and ϕ according to Boltzmann distribution
+        # (relative to adj_spin_sum)
+        new_cosθ = log1p(rand(ctx.rng) * (exp(2H) - 1)) / H - 1
+        new_ϕ = 2π * rand(ctx.rng)
     end
     return nothing
 end
