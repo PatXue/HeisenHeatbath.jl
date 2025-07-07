@@ -28,7 +28,7 @@ end
 
 Fill the first 3 elements of vec with a 3D unit vector, generated uniformly
 """
-function rand_vector!(vec, rng=default_rng())
+function rand_vector!(vec, rng::AbstractRNG=default_rng())
     ϕ = 2π * rand(rng)
     θ = acos(2 * rand(rng) - 1)
 
@@ -56,28 +56,32 @@ function sum_adj(M, (x, y))
            M[mod1(x+1, Lx), y, :] + M[x, mod1(y+1, Ly), :]
 end
 
-function Carlo.sweep!(mc::HeisenHeatbathMC, ctx::Carlo.MCContext)
+function Carlo.sweep!(mc::HeisenHeatbathMC, rng::AbstractRNG=default_rng())
     Lx, Ly = size(mc.spins, 1), size(mc.spins, 2)
     for _ in 1:length(mc.spins)
         # Select site for spin change
-        x = rand(ctx.rng, 1:Lx)
-        y = rand(ctx.rng, 1:Ly)
+        x = rand(rng, 1:Lx)
+        y = rand(rng, 1:Ly)
 
         # Sum of nearest neighbors' spins
         adj_spin_sum = sum_adj(mc.spins, (x, y))
         H = adj_spin_sum ./ mc.T
-        unit_H = H ./ sqrt(sum(H .^ 2))
+        unit_H = H ./ norm(H)
         H⊥ = nullspace(unit_H')
 
         # Randomly generate new θ and ϕ according to Boltzmann distribution
         # (relative to H)
-        cosθ = log1p(rand(ctx.rng) * (exp(2H) - 1)) / H - 1
-        ϕ = 2π * rand(ctx.rng)
+        cosθ = log1p(rand(rng) * (exp(2norm(H)) - 1)) / norm(H) - 1
+        ϕ = 2π * rand(rng)
 
         ϕ_comp = sqrt(1 - cosθ^2) * (cos(ϕ)H⊥[:, 1] + sin(ϕ)H⊥[:, 2])
         mc.spins[x, y, :] .= cosθ * unit_H + ϕ_comp
     end
     return nothing
+end
+
+function Carlo.sweep!(mc::HeisenHeatbathMC, ctx::Carlo.MCContext)
+    Carlo.sweep!(mc, ctx.rng)
 end
 
 function Carlo.measure!(mc::HeisenHeatbathMC, ctx::Carlo.MCContext)
