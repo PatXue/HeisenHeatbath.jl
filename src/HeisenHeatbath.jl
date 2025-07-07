@@ -6,14 +6,12 @@ import Random, Random.AbstractRNG
 
 export HeisenHeatbathMC
 
-const Vector3D = NTuple{3, Float64}
-
 # Note: Using temperature in units of energy (k_B = 1)
 mutable struct HeisenHeatbathMC <: AbstractMC
-    T::Float64 # Temperature
-    J::Float64 # Interaction energy
-    H::Float64 # External field
-    spins::Matrix{Vector3D}
+    const T::Float64 # Temperature
+    const J::Float64 # Interaction energy
+    const H::Float64 # External field
+    spins::Array{Float64, 3}
 end
 
 function HeisenHeatbathMC(params::AbstractDict)
@@ -21,7 +19,7 @@ function HeisenHeatbathMC(params::AbstractDict)
     T = params[:T]
     J = params[:J]
     H = params[:H]
-    return HeisenHeatbathMC(T, J, H, fill((0, 0, 0), Lx, Ly))
+    return HeisenHeatbathMC(T, J, H, fill(0, (Lx, Ly, 3)))
 end
 
 """
