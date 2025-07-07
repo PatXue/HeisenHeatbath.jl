@@ -2,6 +2,7 @@ module HeisenHeatbath
 
 using Carlo
 using HDF5
+using LinearAlgebra
 import Random.default_rng, Random.AbstractRNG
 
 export HeisenHeatbathMC
@@ -49,22 +50,32 @@ function Carlo.init!(mc::HeisenHeatbathMC, ctx::Carlo.MCContext, params::Abstrac
     return nothing
 end
 
+function sum_adj(M, (x, y))
+    Lx, Ly = size(M, 1), size(M, 2)
+    return M[mod1(x-1, Lx), y, :] + M[x, mod1(y-1, Ly), :] +
+           M[mod1(x+1, Lx), y, :] + M[x, mod1(y+1, Ly), :]
+end
+
 function Carlo.sweep!(mc::HeisenHeatbathMC, ctx::Carlo.MCContext)
-    Lx, Ly = size(mc.spins)
+    Lx, Ly = size(mc.spins, 1), size(mc.spins, 2)
     for _ in 1:length(mc.spins)
         # Select site for spin change
         x = rand(ctx.rng, 1:Lx)
         y = rand(ctx.rng, 1:Ly)
 
         # Sum of nearest neighbors' spins
-        adj_spin_sum = mc.spins[mod1(x-1, Lx), y] .+ mc.spins[x, mod1(y-1, Ly)] .+
-                       mc.spins[mod1(x+1, Lx), y] .+ mc.spins[x, mod1(y+1, Ly)]
+        adj_spin_sum = sum_adj(mc.spins, (x, y))
         H = adj_spin_sum ./ mc.T
+        unit_H = H ./ sqrt(sum(H .^ 2))
+        H⊥ = nullspace(unit_H')
 
         # Randomly generate new θ and ϕ according to Boltzmann distribution
-        # (relative to adj_spin_sum)
-        new_cosθ = log1p(rand(ctx.rng) * (exp(2H) - 1)) / H - 1
-        new_ϕ = 2π * rand(ctx.rng)
+        # (relative to H)
+        cosθ = log1p(rand(ctx.rng) * (exp(2H) - 1)) / H - 1
+        ϕ = 2π * rand(ctx.rng)
+
+        ϕ_comp = sqrt(1 - cosθ^2) * (cos(ϕ)H⊥[:, 1] + sin(ϕ)H⊥[:, 2])
+        mc.spins[x, y, :] .= cosθ * unit_H + ϕ_comp
     end
     return nothing
 end
