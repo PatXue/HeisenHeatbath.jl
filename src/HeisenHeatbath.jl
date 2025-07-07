@@ -7,10 +7,10 @@ import Random.default_rng, Random.AbstractRNG
 export HeisenHeatbathMC
 
 # Note: Using temperature in units of energy (k_B = 1)
-mutable struct HeisenHeatbathMC <: AbstractMC
-    const T::Float64 # Temperature
-    const J::Float64 # Interaction energy
-    const H::Float64 # External field
+struct HeisenHeatbathMC <: AbstractMC
+    T::Float64 # Temperature
+    J::Float64 # Interaction energy
+    H::Float64 # External field
     spins::Array{Float64, 3}
 end
 
