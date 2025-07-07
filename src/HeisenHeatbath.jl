@@ -2,7 +2,7 @@ module HeisenHeatbath
 
 using Carlo
 using HDF5
-import Random, Random.AbstractRNG
+import Random.default_rng, Random.AbstractRNG
 
 export HeisenHeatbathMC
 
@@ -23,23 +23,29 @@ function HeisenHeatbathMC(params::AbstractDict)
 end
 
 """
-    rand_vector([rng = default_rng()])
+    rand_vector(vec, [rng = default_rng()])
 
-Generate a random 3D unit vector, uniformly distributed
+Fill the first 3 elements of vec with a 3D unit vector, generated uniformly
 """
-function rand_vector(rng::AbstractRNG = Random.default_rng())
+function rand_vector!(vec, rng=default_rng())
     ϕ = 2π * rand(rng)
     θ = acos(2 * rand(rng) - 1)
 
-    return (cos(ϕ)sin(θ), sin(ϕ)sin(θ), cos(θ))
+    vec[1] = cos(ϕ)sin(θ)
+    vec[2] = sin(ϕ)sin(θ)
+    vec[3] = cos(θ)
+    return nothing
 end
 
 function Carlo.init!(mc::HeisenHeatbathMC, ctx::Carlo.MCContext, params::AbstractDict)
-    if params[:rand_init]
-        map!(_ -> rand_vector(ctx.rng), mc.spins, mc.spins)
-    else
-        fill!(mc.spins, (0, 0, 1))
+    vec::Vector{Float64} = [0, 0, 1]
+    for slice in eachslice(mc.spins, dims=(1, 2))
+        if params[:rand_init]
+            rand_vector!(vec, ctx.rng)
+        end
+        slice .= vec
     end
+
     return nothing
 end
 
