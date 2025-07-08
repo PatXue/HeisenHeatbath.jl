@@ -85,23 +85,23 @@ function Carlo.sweep!(mc::HeisenHeatbathMC, ctx::Carlo.MCContext)
 end
 
 function Carlo.measure!(mc::HeisenHeatbathMC, ctx::Carlo.MCContext)
+    Lx, Ly = size(mc.spins, 1), size(mc.spins, 2)
     # Magnetization per lattice site
-    mag = sum(mc.spins) / length(mc.spins)
+    mag = norm(sum(mc.spins, dims=(1, 2))) / (Lx * Ly)
     measure!(ctx, :Mag, mag)
-    measure!(ctx, :AbsMag, abs(mag))
     measure!(ctx, :Mag2, mag^2)
     measure!(ctx, :Mag4, mag^4)
 
-    Lx, Ly = size(mc.spins)
+    # Energy per lattice site
     energy = 0.0
-    for x in 1:size(mc.spins, 1)
-        for y in 1:size(mc.spins, 2)
-            energy += -mc.J * mc.spins[x, y] *
+    for x in 1:Lx
+        for y in 1:Ly
+            energy += -mc.J * mc.spins[x, y] ⋅
                       (mc.spins[mod1(x+1, Lx), y] + mc.spins[x, mod1(y+1, Ly)])
-            energy += -mc.H * mc.spins[x, y]
         end
     end
     energy /= length(mc.spins)
+    energy += -mc.H * mag
     measure!(ctx, :Energy, energy)
     measure!(ctx, :Energy2, energy^2)
 
@@ -120,10 +120,6 @@ function Carlo.register_evaluables(
 
     evaluate!(eval, :HeatCap, (:Energy2, :Energy)) do E2, E
         return N * (E2 - E^2) / T^2
-    end
-
-    evaluate!(eval, :BinderRatio, (:Mag2, :Mag4)) do mag2, mag4
-        return 1 - mag4/(3mag2^2)
     end
 
     return nothing
