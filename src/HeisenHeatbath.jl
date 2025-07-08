@@ -115,7 +115,7 @@ function Carlo.register_evaluables(
     T = params[:T]
     J = params[:J]
     N = params[:Lx] * params[:Ly]
-    evaluate!(eval, :χ, (:AbsMag, :Mag2)) do mag, mag2
+    evaluate!(eval, :χ, (:Mag, :Mag2)) do mag, mag2
         return N * J/T * (mag2 - mag^2)
     end
 
