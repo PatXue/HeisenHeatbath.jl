@@ -86,8 +86,9 @@ end
 
 function Carlo.measure!(mc::HeisenHeatbathMC, ctx::Carlo.MCContext)
     Lx, Ly = size(mc.spins, 1), size(mc.spins, 2)
+    N = Lx * Ly
     # Magnetization per lattice site
-    mag = norm(sum(mc.spins, dims=(1, 2))) / (Lx * Ly)
+    mag = norm(sum(mc.spins, dims=(1, 2))) / N
     measure!(ctx, :Mag, mag)
     measure!(ctx, :Mag2, mag^2)
     measure!(ctx, :Mag4, mag^4)
@@ -100,7 +101,7 @@ function Carlo.measure!(mc::HeisenHeatbathMC, ctx::Carlo.MCContext)
                       (mc.spins[mod1(x+1, Lx), y] + mc.spins[x, mod1(y+1, Ly)])
         end
     end
-    energy /= length(mc.spins)
+    energy /= N
     energy += -mc.H * mag
     measure!(ctx, :Energy, energy)
     measure!(ctx, :Energy2, energy^2)
