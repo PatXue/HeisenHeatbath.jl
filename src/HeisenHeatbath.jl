@@ -65,7 +65,7 @@ function Carlo.sweep!(mc::HeisenHeatbathMC, rng::AbstractRNG=default_rng())
 
         # Sum of nearest neighbors' spins
         adj_spin_sum = sum_adj(mc.spins, (x, y))
-        H = adj_spin_sum ./ mc.T
+        H = mc.J * adj_spin_sum ./ mc.T
         unit_H = H ./ norm(H)
         H⊥ = nullspace(unit_H')
 
