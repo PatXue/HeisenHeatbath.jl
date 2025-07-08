@@ -97,8 +97,8 @@ function Carlo.measure!(mc::HeisenHeatbathMC, ctx::Carlo.MCContext)
     energy = 0.0
     for x in 1:Lx
         for y in 1:Ly
-            energy += -mc.J * mc.spins[x, y] ⋅
-                      (mc.spins[mod1(x+1, Lx), y] + mc.spins[x, mod1(y+1, Ly)])
+            energy += -mc.J * mc.spins[x, y, :] ⋅
+                (mc.spins[mod1(x+1, Lx), y, :] + mc.spins[x, mod1(y+1, Ly), :])
         end
     end
     energy /= N
