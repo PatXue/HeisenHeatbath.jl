@@ -1,4 +1,4 @@
-/Manifest*.toml
+Manifest*.toml
 *.data
 *.results.json
 *.png
