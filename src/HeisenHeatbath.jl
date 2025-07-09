@@ -64,9 +64,8 @@ function Carlo.sweep!(mc::HeisenHeatbathMC, rng::AbstractRNG=default_rng())
         y = rand(rng, 1:Ly)
 
         # Sum of nearest neighbors' spins
-        adj_spin_sum = sum_adj(mc.spins, (x, y))
-        H = mc.J * adj_spin_sum ./ mc.T
-        unit_H = H ./ norm(H)
+        H = mc.J * sum_adj(mc.spins, (x, y)) / mc.T
+        unit_H = H / norm(H)
         H⊥ = nullspace(unit_H')
 
         # Randomly generate new θ and ϕ according to Boltzmann distribution
